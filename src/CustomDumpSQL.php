@@ -95,10 +95,18 @@ class BackupDB
         $queryString .= 'FROM ';
         $queryString .= $table['name'];
 
-         if(array_key_exists('where', $table)){
+        if(array_key_exists('where', $table)){
             $queryString .= ' WHERE ' . $table['where'] . ' ';
         }
-        return $this->db->query($queryString)->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response = $this->db->query($queryString);
+        if(!$response){
+            echo 'Error when trying to obtain data for table ' . $table['name'] . "\n";
+            echo "Check array of tables passed \n";
+            exit;
+        }
+        
+        return $response->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /** 
