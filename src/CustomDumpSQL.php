@@ -1,4 +1,5 @@
 <?php
+require_once 'strings.php';
 
 class BackupDB
 {
@@ -20,10 +21,22 @@ class BackupDB
     );
 
     /**
+     * Value of the current status connection on DB
+     * @var string
+     */
+    private $connectionStatus;
+
+    /**
      * Name of the backup file to create
      * @var string
      */
     private $fileName;
+
+    /**
+     * Obtaint the sql dump to save on file
+     * @var string
+     */
+    private $dumpSql;
 
     /**
      * Get the data and the select fields of table
@@ -48,9 +61,16 @@ class BackupDB
         $dsn = 'mysql:dbname=' . $this->connectionSettings['dbName'] . ';host=' . $this->connectionSettings['dbHost'];
         try {
             $this->db = new PDO($dsn, $this->connectionSettings['dbUsername'], $this->connectionSettings['dbPassword']);
-            echo "Success connected to DB \n";
+            $this->connectionStatus = STRINGS['connectionDBSuccess'];
+            echo  $this->connectionStatus . "\n";
+            return $this->connectionStatus;
+            
+
         } catch (PDOException $e) {
-            echo 'Connection failed: ' . $e->getMessage() . "\n";
+            $this->connectionStatus = STRINGS['connectionDBError'];
+            echo  $this->connectionStatus . $e->getMessage() . "\n";
+            return $this->connectionStatus;
+            
         }
     }
 
@@ -139,25 +159,37 @@ class BackupDB
     public function createDump()
     {
         echo "Generando archivo sql ... \n";
-        $dumpSql = '';
+        $this->dumpSql = '';
         foreach($this->tables as $table){
             $items = $this->getItemsFromDB($table);
             if(count($items) > 0){
-                $dumpSql .= $this->generateInsertText($table);
-                $dumpSql .= $this->generateInsertValues($items);
+                $this->dumpSql .= $this->generateInsertText($table);
+                $this->dumpSql .= $this->generateInsertValues($items);
             }else{
                 echo "\n No data found on table " . $table['name'] . "\n";
             }
             echo "-----------------------------------------\n";
         }
-        
 
+       // echo $this->dumpSql;
+        
         try {
             fopen($this->fileName, 'w');
-            file_put_contents($this->fileName, $dumpSql);
+            file_put_contents($this->fileName, $this->dumpSql);
         } catch (Exception $e) {
             throw new Exception('Error al intentar generar el archivo de backup');
         }
+    }
+
+
+    public function getConnectionStatus()
+    {
+        return $this->connectionStatus;
+    }
+
+    public function getDumpSql()
+    {
+        return $this->dumpSql;
     }
 }
 

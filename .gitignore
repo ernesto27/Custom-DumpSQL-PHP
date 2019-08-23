@@ -1,3 +1,4 @@
+vendor
 mysql_data
 docker
 *.sql
